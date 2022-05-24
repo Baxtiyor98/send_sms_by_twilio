@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 
 from codes.forms import CodeForm
 from codes.utils import send_sms
@@ -30,14 +30,17 @@ def verify_view(request):
         user = CustomUser.objects.get(pk=pk)
         code = user.code
         if not request.POST:
-            print(f"{user.username}:{code.number}",user.phone_number)
             send_sms(code.number, user.phone_number)
         if form.is_valid():
             num = form.cleaned_data.get('number')
-            if str(code.number) == num:
+            if str(user.code.number) == num:
                 code.save()
                 login(request, user)
                 return redirect('home-view')
             else:
                 return redirect('login-view')
     return render(request, 'verify.html', {'form': form})
+
+def log_out(request):
+    logout(request)
+    return redirect('login-view')
